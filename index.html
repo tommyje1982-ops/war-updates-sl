@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="si" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAR LIVE | මැද පෙරදිග පුවත් සේවය</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+Sinhala:wght@400;700&display=swap');
+
+        :root[data-theme="dark"] {
+            --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #f0f6fc; --muted: #8b949e; --accent: #1f6feb; --red: #ff4d4d;
+        }
+        :root[data-theme="light"] {
+            --bg: #ffffff; --card: #f6f8fa; --border: #d0d7de; --text: #1f2328; --muted: #656d76; --accent: #0969da; --red: #d1242f;
+        }
+
+        body { font-family: 'Noto Sans Sinhala', 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
+        
+        .ticker { background: #ff0000; color: white; padding: 8px 5%; font-size: 14px; font-weight: bold; position: sticky; top: 0; z-index: 1001; }
+        .header { background: var(--card); border-bottom: 3px solid var(--red); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 28px; font-weight: 900; color: var(--red); }
+
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+
+        /* Main Grid */
+        .news-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        @media (max-width: 900px) { .news-grid { grid-template-columns: 1fr; } }
+
+        .main-article { background: var(--card); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; position: relative; }
+        .main-img { width: 100%; height: 450px; object-fit: cover; }
+        .main-overlay { position: absolute; bottom: 0; background: linear-gradient(transparent, rgba(0,0,0,0.9)); width: 100%; padding: 40px 20px 20px; color: white; }
+
+        /* Tiles Grid */
+        .tiles-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .news-tile { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: 0.2s; cursor: pointer; }
+        .news-tile:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .tile-img { width: 100%; height: 180px; object-fit: cover; }
+        .tile-body { padding: 15px; }
+        .tile-title { font-size: 16px; font-weight: bold; margin-bottom: 10px; line-height: 1.4; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; overflow-y: auto; }
+        .modal-content { background: var(--bg); max-width: 800px; margin: 20px auto; border-radius: 12px; overflow: hidden; }
+        .modal-body { padding: 30px; }
+        .close-btn { color: white; font-size: 35px; position: absolute; top: 10px; right: 25px; cursor: pointer; }
+
+        .theme-btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="ticker"><marquee>BREAKING: ඉරාන මිසයිල ප්‍රහාර හේතුවෙන් ටෙල් අවිව් නුවර ගුවන් තොටුපළ තාවකාලිකව වසා දමයි...</marquee></div>
+
+<header class="header">
+    <div class="logo">WAR<span style="color:var(--text)">LIVE</span></div>
+    <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
+</header>
+
+<div class="container">
+    <div class="news-grid">
+        <div id="main-feature"></div>
+        <div style="background:var(--card); padding:20px; border-radius:8px; border:1px solid var(--border);">
+            <h3 style="color:var(--red)">🔴 සජීවී යාවත්කාලීන</h3>
+            <div id="side-updates" style="font-size:14px; line-height:1.8"></div>
+        </div>
+    </div>
+
+    <h2 style="margin-top:40px; border-left: 5px solid var(--red); padding-left:15px;">තවත් පුවත්</h2>
+    <div class="tiles-container" id="tiles-grid"></div>
+</div>
+
+<div id="articleModal" class="modal">
+    <span class="close-btn" onclick="closeArticle()">&times;</span>
+    <div class="modal-content"><div id="modal-data"></div></div>
+</div>
+
+<script>
+    const articles = [
+        {
+            id: 1, title: "ඊශ්‍රායල - ඉරාන යුද්ධය තීරණාත්මක අදියරක - ඇමරිකාවෙන් අනතුරු ඇඟවීමක්",
+            desc: "ඉරානයේ න්‍යෂ්ටික බලාගාර ඉලක්ක කර ප්‍රහාර එල්ල කළහොත් එහි ප්‍රතිඵල බරපතල වනු ඇති බව ඇමරිකානු ජනාධිපති පවසයි.",
+            img: "https://images.unsplash.com/photo-1531259683007-016a7b628fc3?w=800",
+            cat: "BREAKING", time: "දැන්"
+        },
+        {
+            id: 2, title: "රතු මුහුදේ වෙළඳ නැවකට ඩ්‍රෝන ප්‍රහාරයක් - කාර්ය මණ්ඩලය ඉවත් කරයි",
+            desc: "හූති කැරලිකරුවන් විසින් එල්ල කරන ලද ප්‍රහාරයකින් නැවේ එන්ජිමට හානි සිදුව ඇති බව වාර්තා වේ.",
+            img: "https://images.unsplash.com/photo-1517976487492-5750f3195933?w=500",
+            cat: "MARITIME", time: "පැයකට පෙර"
+        },
+        {
+            id: 3, title: "ඉරාන තෙල් පිරිපහදු ඉලක්ක කර ප්‍රහාර එල්ල වීමේ අවදානමක්",
+            desc: "ගෝලීය වෙළඳපොලේ බොරතෙල් මිල තවදුරටත් ඉහළ යා හැකි බව ආර්ථික විශේෂඥයින් පවසයි.",
+            img: "https://images.unsplash.com/photo-1543286386-713bdd548da4?w=500",
+            cat: "ECONOMY", time: "පැය 2කට පෙර"
+        },
+        {
+            id: 4, title: "ලෙබනන් දේශසීමාවේ දරුණු සටන් - ඊශ්‍රායල සෙබළුන් කිහිප දෙනෙකුට තුවාල",
+            desc: "හිස්බුල්ලා සංවිධානය සහ ඊශ්‍රායල පාබල හමුදාව අතර දේශසීමා ආසන්නයේ දරුණු සටන් ඇවිළෙයි.",
+            img: "https://images.unsplash.com/photo-1582213713364-2bac3df7f055?w=500",
+            cat: "MILITARY", time: "පැය 3කට පෙර"
+        },
+        {
+            id: 5, title: "රුසියාවෙන් ඉරානයට නවතම රේඩාර් පද්ධති ලබා දෙයි",
+            desc: "ඊශ්‍රායල ප්‍රහාර හඳුනා ගැනීම සඳහා රුසියාව සහාය වන බව වාර්තා වේ.",
+            img: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=500",
+            cat: "DEFENSE", time: "පැය 5කට පෙර"
+        },
+        {
+            id: 6, title: "ඉරාන සිවිල් වැසියන් ආරක්ෂිත ස්ථාන කරා යොමු කෙරේ",
+            desc: "ඉදිරි පැය 24 ඇතුළත ප්‍රහාර එල්ල විය හැකි බවට බුද්ධි තොරතුරු ලැබී ඇති බව සඳහන් වේ.",
+            img: "https://images.unsplash.com/photo-1541873676947-d3493e8203f5?w=500",
+            cat: "CIVILIAN", time: "පැය 6කට පෙර"
+        }
+    ];
+
+    function renderNews() {
+        const feature = document.getElementById('main-feature');
+        const tiles = document.getElementById('tiles-grid');
+        const side = document.getElementById('side-updates');
+
+        feature.innerHTML = `
+            <div class="main-article" onclick="openArticle(${articles[0].id})">
+                <img src="${articles[0].img}" class="main-img">
+                <div class="main-overlay">
+                    <span style="background:var(--red); padding:5px 10px; border-radius:5px; font-size:12px;">${articles[0].cat}</span>
+                    <h1 style="margin:10px 0;">${articles[0].title}</h1>
+                    <p>${articles[0].desc}</p>
+                </div>
+            </div>
+        `;
+
+        tiles.innerHTML = articles.slice(1).map(a => `
+            <div class="news-tile" onclick="openArticle(${a.id})">
+                <img src="${a.img}" class="tile-img">
+                <div class="tile-body">
+                    <div style="color:var(--red); font-size:11px; font-weight:bold; margin-bottom:5px;">${a.cat} • ${a.time}</div>
+                    <div class="tile-title">${a.title}</div>
+                </div>
+            </div>
+        `).join('');
+
+        side.innerHTML = articles.map(a => `• ${a.title}<br><hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">`).join('');
+    }
+
+    function openArticle(id) {
+        const article = articles.find(a => a.id === id);
+        document.getElementById('modal-data').innerHTML = `
+            <img src="${article.img}" style="width:100%; max-height:400px; object-fit:cover;">
+            <div class="modal-body">
+                <span style="color:var(--red); font-weight:bold;">${article.cat}</span>
+                <h2>${article.title}</h2>
+                <p style="line-height:1.8; font-size:17px;">${article.desc} Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <small style="color:var(--muted)">පල කළේ: ${article.time}</small>
+            </div>
+        `;
+        document.getElementById('articleModal').style.display = "block";
+    }
+
+    function closeArticle() { document.getElementById('articleModal').style.display = "none"; }
+    function toggleTheme() {
+        const root = document.documentElement;
+        root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    }
+
+    window.onload = renderNews;
+</script>
+</body>
+</html>
